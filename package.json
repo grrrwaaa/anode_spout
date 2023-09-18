@@ -1,0 +1,17 @@
+{
+	"name": "spout",
+	"version": "0.0.1",
+	"description": "native node bindings to SpoutGL",
+	"main": "index.js",
+	"scripts": {
+		"install": "node-gyp rebuild"
+	},
+	"gypfile": true,
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"bindings": "1.5.0",
+		"native-graphics-deps": "0.0.21",
+		"node-addon-api": "^3.1.0"
+	}
+}
