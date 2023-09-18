@@ -65,10 +65,10 @@ window.draw = function() {
 		// resize the texture
 		spoutTex.dispose()
 		spoutTex = glutils.createPixelTexture(gl, receiver.getSenderWidth(), receiver.getSenderHeight())
-		console.log(spoutTex)
+		//console.log(spoutTex)
     }
 
-	glfw.setWindowTitle(this.window, `receiver ${receiver.isConnected()} ${receiver.getSenderName()}, ${received}`);
+	glfw.setWindowTitle(this.window, `receiver ${receiver.isConnected()} ${receiver.getSenderName()}, ${received}, ${receiver.getSenderFrame()}`);
 
 	gl.viewport(0, 0, dim[0], dim[1]);
 	gl.enable(gl.DEPTH_TEST)

@@ -3,6 +3,8 @@ const assert = require("assert"),
 	fs = require("fs"),
     path = require("path")
 
+const spout = require("./spout.js")
+
 // add anode_gl to the module search paths:
 module.paths.push(path.resolve(path.join(__dirname, "..", "anode_gl")))
 
@@ -68,7 +70,6 @@ void main() {
 }
 `);
 
-const spout = require("./spout.js")
 let sender = new spout.Sender("nodejs")
 
 window.draw = function() {
