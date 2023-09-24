@@ -50,12 +50,6 @@ let senders = receiver.getSenders()
 console.log("senders", senders)
 receiver.setActiveSender(senders[0])
 
-function metadata2string(metadata) {
-	let metastring = Buffer.from(receiver.metadata.buffer).toString()
-	let c = metastring.indexOf('\0')
-	return (c >= 0) ? metastring.substring(0,c) : metastring;
-}
-
 window.draw = function() {
 	let { dim } = this;
 
@@ -65,7 +59,7 @@ window.draw = function() {
 	// receiver.metadata is a raw Uint8array
 	console.log(receiver.metadata)  
 	// if it was supposed to be a string (which e.g. Max sends data as), convert to string like this:
-	//console.log(metadata2string(receiver.metadata))
+	//console.log(spout.metadata2string(receiver.metadata))
 
     if (receiver.isUpdated()) {
         console.log("receive from", receiver.getSenderName())
