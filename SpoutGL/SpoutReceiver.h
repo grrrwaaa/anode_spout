@@ -2,7 +2,7 @@
 
 					SpoutReceiver.h
 
-	Copyright (c) 2014-2022, Lynn Jarvis. All rights reserved.
+	Copyright (c) 2014-2023, Lynn Jarvis. All rights reserved.
 
 	Redistribution and use in source and binary forms, with or without modification, 
 	are permitted provided that the following conditions are met:
@@ -107,6 +107,10 @@ class SPOUT_DLLEXP SpoutReceiver {
 	void SetFrameSync(const char* SenderName);
 	// Wait or test for a sync event
 	bool WaitFrameSync(const char *SenderName, DWORD dwTimeout = 0);
+	// Enable / disable frame sync
+	void EnableFrameSync(bool bSync = true);
+	// Check for frame sync option
+	bool IsFrameSyncEnabled();
 
 	//
 	// Data sharing
@@ -171,10 +175,25 @@ class SPOUT_DLLEXP SpoutReceiver {
 	char * AdapterName();
 	// Get current adapter index
 	int GetAdapter();
-	// Set graphics adapter for output
-	bool SetAdapter(int index = 0);
-	// Get the current adapter description
-	bool GetAdapterInfo(char *renderdescription, char *displaydescription, int maxchars);
+	// Get the description and output display name of the current adapter
+	bool GetAdapterInfo(char* description, char* output, int maxchars);
+	// Get the description and output display name for a given adapter
+	bool GetAdapterInfo(int index, char* description, char* output, int maxchars);
+	// Windows 10 Vers 1803, build 17134 or later
+#ifdef NTDDI_WIN10_RS4
+	// Get the Windows graphics preference for an application
+	int GetPerformancePreference(const char* path = nullptr);
+	// Set the Windows graphics preference for an application
+	bool SetPerformancePreference(int preference, const char* path = nullptr);
+	// Get the graphics adapter name for a Windows preference
+	bool GetPreferredAdapterName(int preference, char* adaptername, int maxchars);
+	// Set graphics adapter index for a Windows preference
+	bool SetPreferredAdapter(int preference);
+	// Availability of Windows graphics preference
+	bool IsPreferenceAvailable();
+	// Is the path a valid application
+	bool IsApplicationPath(const char* path);
+#endif
 
 	//
 	// User settings recorded by "SpoutSettings"
@@ -246,13 +265,29 @@ class SPOUT_DLLEXP SpoutReceiver {
 		unsigned int width, unsigned int height,
 		bool bInvert = false, GLuint HostFBO = 0);
 
-	
+	//
+	// Formats
+	//
+
+	// Get sender DX11 shared texture format
+	DXGI_FORMAT GetDX11format();
+	// Set sender DX11 shared texture format
+	void SetDX11format(DXGI_FORMAT textureformat);
+	// Return OpenGL compatible DX11 format
+	DXGI_FORMAT DX11format(GLint glformat);
+	// Return DX11 compatible OpenGL format
+	GLint GLDXformat(DXGI_FORMAT textureformat = DXGI_FORMAT_UNKNOWN);
+	// Return OpenGL texture internal format
+	GLint GLformat(GLuint TextureID, GLuint TextureTarget);
+	// Return OpenGL texture format description
+	std::string GLformatName(GLint glformat = 0);
+
 	//
 	// 2.006 compatibility
 	//
 
 	// Create receiver connection
-	bool CreateReceiver(char* Sendername, unsigned int &width, unsigned int &height, bool bUseActive = false);
+	bool CreateReceiver(char* Sendername, unsigned int &width, unsigned int &height);
 	// Check receiver connection
 	bool CheckReceiver(char* Sendername, unsigned int &width, unsigned int &height, bool &bConnected);
 	// Receive OpenGL texture

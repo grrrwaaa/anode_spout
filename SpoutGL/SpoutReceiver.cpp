@@ -67,10 +67,21 @@
 //		24.04.21	- Add OpenGL shared texture access functions
 //		03.06.21	- Add GetMemoryBufferSize
 //		15.10.21	- Allow no argument for SetReceiverName
+//		18.04.22	- Change default invert from true to false for fbo sending functions
+//		31.10.22	- Add GetPerformancePreference, SetPerformancePreference, GetPreferredAdapterName
+//		01.11.22	- Add SetPreferredAdapter
+//		03.11.22	- Add IsPreferenceAvailable
+//		07.11.22	- Add IsApplicationPath
+//		14.12.22	- Remove SetAdapter. Requires OpenGL setup.
+// Version 2.007.11
+//		06.07.23	- Remove bUseActive from 2.006 CreateReceiver
+//	Version 2.007.012
+//		04.08.23	- Add format functions
+//		07.08.23	- Add frame sync option functions
 //
 // ====================================================================================
 //
-//	Copyright (c) 2014-2022, Lynn Jarvis. All rights reserved.
+//	Copyright (c) 2014-2023, Lynn Jarvis. All rights reserved.
 //
 //	Redistribution and use in source and binary forms, with or without modification, 
 //	are permitted provided that the following conditions are met:
@@ -143,8 +154,6 @@ void SpoutReceiver::ReleaseReceiver()
 {
 	spout.ReleaseReceiver();
 }
-
-
 
 //---------------------------------------------------------
 bool SpoutReceiver::ReceiveTexture()
@@ -284,6 +293,18 @@ bool SpoutReceiver::WaitFrameSync(const char *SenderName, DWORD dwTimeout)
 }
 
 //---------------------------------------------------------
+void SpoutReceiver::EnableFrameSync(bool bSync)
+{
+	spout.EnableFrameSync(bSync);
+}
+
+//---------------------------------------------------------
+bool SpoutReceiver::IsFrameSyncEnabled()
+{
+	return spout.IsFrameSyncEnabled();
+}
+
+//---------------------------------------------------------
 int SpoutReceiver::ReadMemoryBuffer(const char* name, char* data, int maxlength)
 {
 	return spout.ReadMemoryBuffer(name, data, maxlength);
@@ -416,16 +437,57 @@ int SpoutReceiver::GetAdapter()
 }
 
 //---------------------------------------------------------
-bool SpoutReceiver::SetAdapter(int index)
+bool SpoutReceiver::GetAdapterInfo(char* description, char* output, int maxchars)
 {
-	return spout.SetAdapter(index);
+	return spout.GetAdapterInfo(description, output, maxchars);
 }
 
 //---------------------------------------------------------
-bool SpoutReceiver::GetAdapterInfo(char *renderdescription, char *displaydescription, int maxchars)
+bool SpoutReceiver::GetAdapterInfo(int index, char* description, char* output, int maxchars)
 {
-	return spout.GetAdapterInfo(renderdescription, displaydescription, maxchars);
+	return spout.GetAdapterInfo(index, description, output, maxchars);
 }
+
+// Windows 10 Vers 1803, build 17134 or later
+#ifdef NTDDI_WIN10_RS4
+
+//---------------------------------------------------------
+int SpoutReceiver::GetPerformancePreference(const char* path)
+{
+	return spout.GetPerformancePreference(path);
+}
+
+//---------------------------------------------------------
+bool SpoutReceiver::SetPerformancePreference(int preference, const char* path)
+{
+	return spout.SetPerformancePreference(preference, path);
+}
+
+//---------------------------------------------------------
+bool SpoutReceiver::GetPreferredAdapterName(int preference, char* adaptername, int maxchars)
+{
+	return spout.GetPreferredAdapterName(preference, adaptername, maxchars);
+}
+
+//---------------------------------------------------------
+bool SpoutReceiver::SetPreferredAdapter(int preference)
+{
+	return spout.SetPreferredAdapter(preference);
+}
+
+//---------------------------------------------------------
+bool SpoutReceiver::IsPreferenceAvailable()
+{
+	return spout.IsPreferenceAvailable();
+}
+
+//---------------------------------------------------------
+bool SpoutReceiver::IsApplicationPath(const char* path)
+{
+	return spout.IsApplicationPath(path);
+}
+#endif
+
 
 //
 // User settings recorded by "SpoutSettings"
@@ -566,14 +628,56 @@ bool SpoutReceiver::CopyTexture(GLuint SourceID, GLuint SourceTarget,
 		width, height, bInvert, HostFBO);
 }
 
+
+//
+// Formats
+//
+
+//---------------------------------------------------------
+DXGI_FORMAT SpoutReceiver::GetDX11format()
+{
+	return spout.GetDX11format();
+}
+
+//---------------------------------------------------------
+void SpoutReceiver::SetDX11format(DXGI_FORMAT textureformat)
+{
+	spout.SetDX11format(textureformat);
+}
+
+//---------------------------------------------------------
+DXGI_FORMAT SpoutReceiver::DX11format(GLint glformat)
+{
+	return spout.DX11format(glformat);
+}
+
+//---------------------------------------------------------
+GLint SpoutReceiver::GLDXformat(DXGI_FORMAT textureformat)
+{
+	return spout.GLDXformat(textureformat);
+}
+
+//---------------------------------------------------------
+GLint SpoutReceiver::GLformat(GLuint TextureID, GLuint TextureTarget)
+{
+	return spout.GLformat(TextureID, TextureTarget);
+}
+
+//---------------------------------------------------------
+std::string SpoutReceiver::GLformatName(GLint glformat)
+{
+	return spout.GLformatName(glformat);
+}
+
+
 //
 // 2.006 compatibility
 //
 
 //---------------------------------------------------------
-bool SpoutReceiver::CreateReceiver(char* sendername, unsigned int &width, unsigned int &height, bool bUseActive)
+bool SpoutReceiver::CreateReceiver(char* sendername, unsigned int &width, unsigned int &height)
 {
-	return spout.CreateReceiver(sendername, width, height, bUseActive);
+	return spout.CreateReceiver(sendername, width, height);
 }
 
 //---------------------------------------------------------

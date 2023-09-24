@@ -80,10 +80,14 @@ struct Sender : public Napi::ObjectWrap<Sender> {
 struct Receiver : public Napi::ObjectWrap<Receiver> {
 
     SpoutReceiver receiver;    // Spout object
+    Napi::TypedArrayOf<uint8_t> metadata;
 
     Receiver(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Receiver>(info) {
 		Napi::Env env = info.Env();
 		Napi::Object This = info.This().As<Napi::Object>();
+        metadata = Napi::TypedArrayOf<uint8_t>::New(env, 128, napi_uint8_array);
+        This.Set("metadata", metadata);
+
         if (info.Length() > 0 && info[0].IsString()) {
             receiver.SetActiveSender(info[0].ToString().Utf8Value().c_str());
         }
@@ -177,6 +181,10 @@ struct Receiver : public Napi::ObjectWrap<Receiver> {
     Napi::Value receiveTexture(const Napi::CallbackInfo& info) {
 		Napi::Env env = info.Env();
 		Napi::Object This = info.This().As<Napi::Object>();
+
+        // also get metadata:
+        getMetadata(info);
+
         if (info.Length() >= 2 
             && info[0].IsNumber()
             && info[1].IsNumber()) {
@@ -188,6 +196,25 @@ struct Receiver : public Napi::ObjectWrap<Receiver> {
                 info[3].ToNumber().Uint32Value()));  // host FBO, optional
         }
         return Napi::Boolean::New(env, false);
+    }
+
+    Napi::Value getMetadata(const Napi::CallbackInfo& info) {
+		Napi::Env env = info.Env();
+		Napi::Object This = info.This().As<Napi::Object>();
+
+        int size = receiver.GetMemoryBufferSize(receiver.GetSenderName());
+        if (size) {
+            if (size != metadata.ElementLength()) {
+                // reallocate
+                //printf("reallocating for %d bytes of metadata\n", size);
+                metadata = Napi::TypedArrayOf<uint8_t>::New(env, size, napi_uint8_array);
+                This.Set("metadata", metadata);
+            }
+            receiver.ReadMemoryBuffer(receiver.GetSenderName(), (char *)metadata.Data(), metadata.ElementLength());
+            // 
+            //printf("received %d %s\n", strlen((char *)metadata.Data()), (char *)metadata.Data());
+        }
+        return metadata;
     }
 };
 
@@ -264,6 +291,7 @@ public:
                 Receiver::InstanceMethod<&Receiver::isConnected>("isConnected"),
                 Receiver::InstanceMethod<&Receiver::isUpdated>("isUpdated"),
                 Receiver::InstanceMethod<&Receiver::receiveTexture>("receiveTexture"),
+                Receiver::InstanceMethod<&Receiver::getMetadata>("getMetadata"),
             });
 
             // Create a persistent reference to the class constructor.
