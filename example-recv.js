@@ -7,13 +7,16 @@ const assert = require("assert"),
 module.paths.push(path.resolve(path.join(__dirname, "..", "anode_gl")))
 
 const gl = require('gles3.js'),
-	glfw = require('glfw3.js'),
-    Window = require("window.js"),
 	glutils = require('glutils.js')
+const { ok } = glutils;
+const glfw = require('glfw3.js')
+const Window = require("window.js")
 
 let window = new Window({
 	width: 720, height: 720
 })
+
+
 
 const quad_vao = glutils.createVao(gl, glutils.makeQuad())
 
@@ -41,37 +44,52 @@ void main() {
 }
 `);
 
-let spoutTex = glutils.createPixelTexture(gl, 1024, 1024)
+
+let spoutTex = glutils.createTexture(gl, { width: 1024, height: 1024 })
+ok(gl, "made spout tex")
 
 const spout = require("./spout.js")
+
+ok(gl, "loaded spout")
 
 let receiver = new spout.Receiver()
 let senders = receiver.getSenders()
 console.log("senders", senders)
 receiver.setActiveSender(senders[0])
 
+let metabuf = new Uint8Array(256);
+
 window.draw = function() {
 	let { dim } = this;
 
+	ok(gl, "start")
+
 	//receiver.receiveTexture(GLuint TextureID, GLuint TextureTarget, bool bInvert, GLuint HostFbo)
 	let received = receiver.receiveTexture(spoutTex.id, gl.TEXTURE_2D, true)
+	ok(gl, "receiveTexture")
 
-	// receiver.metadata is a raw Uint8array
-	console.log(receiver.metadata)  
-	// if it was supposed to be a string (which e.g. Max sends data as), convert to string like this:
-	//console.log(spout.metadata2string(receiver.metadata))
+	if (received && receiver.isFrameNew()) {
+		// receiver.metadata is a raw Uint8array
+		receiver.getMetadata(metabuf)
+		
+		//console.log(receiver.metadata)  
+		// if it was supposed to be a string (which e.g. Max sends data as), convert to string like this:
+		console.log(spout.metadata2string(metabuf))
 
-    if (receiver.isUpdated()) {
-        console.log("receive from", receiver.getSenderName())
-        console.log("receive dim", receiver.getSenderWidth(), receiver.getSenderHeight())
-        console.log("receive frame", receiver.getSenderFrame(), "fps", receiver.getSenderFps())
-        console.log("receive format", receiver.getSenderFormat())
+		if (receiver.isUpdated()) {
+			console.log("receive from", receiver.getSenderName())
+			console.log("receive dim", receiver.getSenderWidth(), receiver.getSenderHeight())
+			console.log("receive frame", receiver.getSenderFrame(), "fps", receiver.getSenderFps())
+			console.log("receive format", receiver.getSenderFormat())
+			ok(gl, "updated")
 
-		// resize the texture
-		spoutTex.dispose()
-		spoutTex = glutils.createPixelTexture(gl, receiver.getSenderWidth(), receiver.getSenderHeight())
-		//console.log(spoutTex)
-    }
+			// resize the texture
+			spoutTex.dispose()
+			spoutTex = glutils.createTexture(gl, { width: receiver.getSenderWidth(), height: receiver.getSenderHeight()})
+			ok(gl, "reallocated")
+			//console.log(spoutTex)
+		}
+	}
 
 	glfw.setWindowTitle(this.window, `receiver ${receiver.isConnected()} ${receiver.getSenderName()}, ${received}, ${receiver.getSenderFrame()}`);
 
@@ -83,6 +101,9 @@ window.draw = function() {
 	spoutTex.bind()
 	show_shader.begin()
 	quad_vao.bind().draw()
+
+	
+	ok(gl, "end")
 }
 
 Window.animate()

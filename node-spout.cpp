@@ -172,6 +172,12 @@ struct Receiver : public Napi::ObjectWrap<Receiver> {
         return Napi::Boolean::New(env, receiver.IsUpdated());
     }
 
+    Napi::Value isFrameNew(const Napi::CallbackInfo& info) {
+		Napi::Env env = info.Env();
+		Napi::Object This = info.This().As<Napi::Object>();
+        return Napi::Boolean::New(env, receiver.IsFrameNew());
+    }
+
     Napi::Value isConnected(const Napi::CallbackInfo& info) {
 		Napi::Env env = info.Env();
 		Napi::Object This = info.This().As<Napi::Object>();
@@ -219,7 +225,7 @@ struct Receiver : public Napi::ObjectWrap<Receiver> {
 		Napi::Object This = info.This().As<Napi::Object>();
 
         // also get metadata:
-        getMetadata(info);
+        //getMetadata(info);
 
         if (info.Length() >= 2 
             && info[0].IsNumber()
@@ -240,17 +246,27 @@ struct Receiver : public Napi::ObjectWrap<Receiver> {
 
         int size = receiver.GetMemoryBufferSize(receiver.GetSenderName());
         if (size) {
-            if (size != metadata.ElementLength()) {
-                // reallocate
-                //printf("reallocating for %d bytes of metadata\n", size);
-                metadata = Napi::TypedArrayOf<uint8_t>::New(env, size, napi_uint8_array);
-                This.Set("metadata", metadata);
+
+            // let's assume the user passed in a uint8array:
+            if (info[0].IsTypedArray()) {
+                auto arr = info[0].As<Napi::TypedArray>();
+                size_t len = arr.ByteLength();
+                void * dst = arr.ArrayBuffer().Data();
+
+                receiver.ReadMemoryBuffer(receiver.GetSenderName(), (char *)dst, len);
             }
-            receiver.ReadMemoryBuffer(receiver.GetSenderName(), (char *)metadata.Data(), metadata.ElementLength());
+
+            // if (size != metadata.ElementLength()) {
+            //     // reallocate
+            //     printf("reallocating for %d bytes of metadata\n", size);
+            //     metadata = Napi::TypedArrayOf<uint8_t>::New(env, size, napi_uint8_array);
+            //     This.Set("metadata", metadata);
+            // }
+            // receiver.ReadMemoryBuffer(receiver.GetSenderName(), (char *)metadata.Data(), metadata.ElementLength());
             // 
             //printf("received %d %s\n", strlen((char *)metadata.Data()), (char *)metadata.Data());
         }
-        return metadata;
+        return This;
     }
 };
 
@@ -327,6 +343,7 @@ public:
                 Receiver::InstanceMethod<&Receiver::getSenderName>("getSenderName"),
                 Receiver::InstanceMethod<&Receiver::isConnected>("isConnected"),
                 Receiver::InstanceMethod<&Receiver::isUpdated>("isUpdated"),
+                Receiver::InstanceMethod<&Receiver::isFrameNew>("isFrameNew"),
                 Receiver::InstanceMethod<&Receiver::receiveTexture>("receiveTexture"),
                 Receiver::InstanceMethod<&Receiver::getMetadata>("getMetadata"),
             });
