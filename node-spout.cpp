@@ -74,6 +74,42 @@ struct Sender : public Napi::ObjectWrap<Sender> {
         }
         return This;
     }
+
+    Napi::Value setMetadata(const Napi::CallbackInfo& info) {
+		Napi::Env env = info.Env();
+		Napi::Object This = info.This().As<Napi::Object>();
+
+        // assume that 1st arg is a string or uint8array that we will send
+
+        if (info.Length() > 0) {
+            const char * name = sender.GetName();
+            int current_size = sender.GetMemoryBufferSize(name);
+            size_t size = 0;
+            char * data = nullptr;
+            if (info[0].IsTypedArray()) {
+                size = info[0].As<Napi::TypedArray>().ByteLength();
+                data = (char *)info[0].As<Napi::TypedArray>().ArrayBuffer().Data();
+            } else if (info[0].IsString()) {
+                // convert info[0] to string and send that
+                std::string str = info[0].As<Napi::String>().Utf8Value();
+                size = str.length()+1; // plus one for null terminator
+                data = (char *)str.c_str();
+            }
+
+            if (size && data) {
+                // reallocate if needed
+                if (size > current_size) {
+                    sender.CreateMemoryBuffer(name, size);
+                }
+
+                // send
+                // bool =
+                sender.WriteMemoryBuffer(name, data, size);
+            }
+        }
+
+        return This;
+    }
 };
 
 
@@ -268,6 +304,7 @@ public:
                 Sender::InstanceMethod<&Sender::setName>("setName"),
                 Sender::InstanceMethod<&Sender::sendFbo>("sendFbo"),
                 Sender::InstanceMethod<&Sender::sendTexture>("sendTexture"),
+                Sender::InstanceMethod<&Sender::setMetadata>("setMetadata"),
             });
 
             // Create a persistent reference to the class constructor.

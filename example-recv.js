@@ -63,9 +63,9 @@ window.draw = function() {
 	let received = receiver.receiveTexture(spoutTex.id, gl.TEXTURE_2D, true)
 
 	// receiver.metadata is a raw Uint8array
-	//console.log(receiver.metadata)  
+	console.log(receiver.metadata)  
 	// if it was supposed to be a string (which e.g. Max sends data as), convert to string like this:
-	console.log(metadata2string(receiver.metadata))
+	//console.log(metadata2string(receiver.metadata))
 
     if (receiver.isUpdated()) {
         console.log("receive from", receiver.getSenderName())

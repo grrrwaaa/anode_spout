@@ -72,6 +72,8 @@ void main() {
 
 let sender = new spout.Sender("nodejs")
 
+let metadata = new Uint8Array(8)
+
 window.draw = function() {
 	let { t, dim } = this;
 
@@ -81,6 +83,9 @@ window.draw = function() {
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	test_shader.begin().uniform("t", t)
 	quad_vao.bind().draw()
+	// set metadata:
+	metadata[0] = t
+	sender.setMetadata(metadata)
 	// you can either send from within the fbo render like this...
 	sender.sendFbo(fbo.id, fbo.width, fbo.height, true)
 	fbo.end()
