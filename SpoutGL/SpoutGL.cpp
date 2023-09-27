@@ -3666,8 +3666,8 @@ bool spoutGL::GLerror() {
 	GLenum err = GL_NO_ERROR;
 	bool bError = false;
 	while ((err = glGetError()) != GL_NO_ERROR) {
-		SpoutLogError("    GLerror - OpenGL error = %u (0x%.7X)", err, err);
-		printf("    GLerror - OpenGL error = %u (0x%.7X)\n", err, err);
+		//SpoutLogError("    GLerror - OpenGL error = %u (0x%.7X)", err, err);
+		//printf("    GLerror - OpenGL error = %u (0x%.7X)\n", err, err);
 		bError = true;
 #ifdef USE_GLEW
 		// gluErrorString needs Glu.h and glu32.lib (or glew)

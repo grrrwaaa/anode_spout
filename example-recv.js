@@ -74,7 +74,7 @@ window.draw = function() {
 		
 		//console.log(receiver.metadata)  
 		// if it was supposed to be a string (which e.g. Max sends data as), convert to string like this:
-		console.log(spout.metadata2string(metabuf))
+		console.log("metadata", spout.metadata2string(metabuf))
 
 		if (receiver.isUpdated()) {
 			console.log("receive from", receiver.getSenderName())
