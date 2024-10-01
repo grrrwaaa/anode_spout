@@ -48,7 +48,7 @@ void main() {
 let spoutTex = glutils.createTexture(gl, { width: 1024, height: 1024 })
 ok(gl, "made spout tex")
 
-const spout = require("./spout.js")
+const spout = require("./index.js")
 
 ok(gl, "loaded spout")
 

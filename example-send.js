@@ -3,7 +3,7 @@ const assert = require("assert"),
 	fs = require("fs"),
     path = require("path")
 
-const spout = require("./spout.js")
+const spout = require("./index.js")
 
 // add anode_gl to the module search paths:
 module.paths.push(path.resolve(path.join(__dirname, "..", "anode_gl")))
