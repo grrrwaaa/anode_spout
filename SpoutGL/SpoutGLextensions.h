@@ -21,12 +21,14 @@
 //					   https://github.com/robtherich/Spout2
 //			19.04.23 - correct glGenBuffersPROC and glUnmapBufferPROC
 //					   to match with Glew.h
+//			18.01.25 - Rename "standalone" to "StandAloneExtensions"
+//					   to avoid naming conflicts
 //
 //			All changes now documented in SpoutGLextensions.cpp
 //
 /*
 
-	Copyright (c) 2014-2023, Lynn Jarvis. All rights reserved.
+	Copyright (c) 2014-2025, Lynn Jarvis. All rights reserved.
 
 	Redistribution and use in source and binary forms, with or without modification, 
 	are permitted provided that the following conditions are met:
@@ -70,13 +72,14 @@
 //
 
 //
-// Define "standalone" here to use the extensions independently of Spout source files.
+// Define "standaloneExtensions" here to use
+// the extensions independently of Spout source files.
 // Leave undefined otherwise.
 //
-// #define standalone
+// #define standaloneExtensions
 //
 
-#ifdef standalone
+#ifdef standaloneExtensions
 
 #include <windows.h>
 #include <stdio.h> // for console
@@ -116,7 +119,7 @@
 #define USE_COPY_EXTENSIONS
 
 // Compute shader extensions
-// For future use
+// Remove for Processing library build (JSpoutLib)
 #define USE_COMPUTE_EXTENSIONS
 
 // If load of context creation extension conflicts, disable it here
@@ -269,6 +272,11 @@ enum ExtLogLevel {
 #define GL_BGRA                        0x80E1
 #endif
 
+// RGBA <> BGRA
+#ifndef GL_TEXTURE_SWIZZLE_RGBA
+#define GL_TEXTURE_SWIZZLE_RGBA        0x8E46
+#endif
+
 // OpenGL floating point formats
 
 // gl3.h
@@ -306,10 +314,18 @@ enum ExtLogLevel {
 //-----------------------------------------------------
 // GL consts that are needed and aren't present in GL.h
 //-----------------------------------------------------
-#define GL_TEXTURE_2D_MULTISAMPLE		0x9100
-#define WGL_ACCESS_READ_ONLY_NV			0x0000
-#define WGL_ACCESS_READ_WRITE_NV		0x0001
-#define WGL_ACCESS_WRITE_DISCARD_NV		0x0002
+#ifndef GL_TEXTURE_2D_MULTISAMPLE
+#define GL_TEXTURE_2D_MULTISAMPLE 	0x9100
+#endif
+#ifndef WGL_ACCESS_READ_ONLY_NV
+#define WGL_ACCESS_READ_ONLY_NV		0x0000
+#endif
+#ifndef WGL_ACCESS_READ_WRITE_NV
+#define WGL_ACCESS_READ_WRITE_NV	0x0001
+#endif
+#ifndef WGL_ACCESS_WRITE_DISCARD_NV
+#define WGL_ACCESS_WRITE_DISCARD_NV	0x0002
+#endif
 
 #define GL_CLAMP_TO_EDGE				0x812F
 
@@ -666,8 +682,28 @@ extern glGetInternalFormativPROC glGetInternalFormativ;
 #define GL_COMPUTE_SHADER 0x91B9
 #endif
 
+#ifndef GL_MAX_COMPUTE_WORK_GROUP_COUNT
+#define GL_MAX_COMPUTE_WORK_GROUP_COUNT   0x91BE
+#endif
+
+#ifndef GL_MAX_COMPUTE_WORK_GROUP_SIZE
+#define GL_MAX_COMPUTE_WORK_GROUP_SIZE    0x91BF
+#endif
+
+#ifndef GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS
+#define GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS 0x90EB
+#endif
+
 #ifndef GL_LINK_STATUS
 #define GL_LINK_STATUS 0x8B82
+#endif
+
+#ifndef GL_ATTACHED_SHADERS
+#define GL_ATTACHED_SHADERS 0x8B85
+#endif
+
+#ifndef GL_INFO_LOG_LENGTH
+#define GL_INFO_LOG_LENGTH 0x8B84
 #endif
 
 #ifndef GL_TEXTURE0
@@ -698,6 +734,9 @@ typedef void   (APIENTRY* glCompileShaderPROC) (GLuint shader);
 typedef void   (APIENTRY* glAttachShaderPROC) (GLuint program, GLuint shader);
 typedef void   (APIENTRY* glLinkProgramPROC) (GLuint program);
 typedef void   (APIENTRY* glGetProgramivPROC) (GLuint program, GLenum pname, GLint* param);
+typedef void   (APIENTRY* glGetProgramInfoLogPROC) (GLuint program, GLsizei maxLength, GLsizei* length, char* infoLog);
+typedef void   (APIENTRY* glGetShaderInfoLogPROC) (GLuint shader, GLsizei maxLength, GLsizei* length, char* infoLog);
+typedef void   (APIENTRY* glGetIntegeri_vPROC) (GLenum target, GLuint index, GLint* data);
 typedef void   (APIENTRY* glDetachShaderPROC) (GLuint program, GLuint shader);
 typedef void   (APIENTRY* glUseProgramPROC) (GLuint program);
 typedef void   (APIENTRY* glBindImageTexturePROC) (GLuint unit, GLuint texture, GLint level, GLboolean layered, GLint layer, GLenum access, GLenum format);
@@ -722,6 +761,9 @@ extern glCompileShaderPROC      glCompileShader;
 extern glAttachShaderPROC       glAttachShader;
 extern glLinkProgramPROC        glLinkProgram;
 extern glGetProgramivPROC       glGetProgramiv;
+extern glGetProgramInfoLogPROC  glGetProgramInfoLog;
+extern glGetShaderInfoLogPROC   glGetShaderInfoLog;
+extern glGetIntegeri_vPROC      glGetIntegeri_v;
 extern glDetachShaderPROC       glDetachShader;
 extern glUseProgramPROC         glUseProgram;
 extern glBindImageTexturePROC   glBindImageTexture;
@@ -778,6 +820,29 @@ extern glMemoryObjectParameterivEXTPROC glMemoryObjectParameterivEXT;
 typedef void (APIENTRY* glGetMemoryObjectParameterivEXTPROC) (GLuint memoryObject, GLenum pname, GLint* params);
 extern glGetMemoryObjectParameterivEXTPROC glGetMemoryObjectParameterivEXT;
 
+typedef GLboolean(APIENTRY* glIsMemoryObjectEXTPROC) (GLuint memoryObject);
+extern glIsMemoryObjectEXTPROC glIsMemoryObjectEXT;
+
+typedef void (APIENTRY* glCreateBuffersPROC) (GLsizei n, GLuint* buffers);
+extern glCreateBuffersPROC glCreateBuffers;
+
+typedef void (APIENTRY* glBindBufferBasePROC) (GLenum target, GLuint index, GLuint buffer);
+extern glBindBufferBasePROC glBindBufferBase;
+
+
+
+
+// LJ DEBUG : TODO
+#define GL_SHADER_STORAGE_BARRIER_BIT                 0x2000
+#define GL_SHADER_STORAGE_BUFFER                      0x90D2
+#define GL_SHADER_STORAGE_BUFFER_BINDING              0x90D3
+#define GL_SHADER_STORAGE_BUFFER_START                0x90D4
+#define GL_SHADER_STORAGE_BUFFER_SIZE                 0x90D5
+#define GL_STATIC_DRAW                                0x88E4
+#define GL_STATIC_READ                                0x88E5
+#define GL_STATIC_COPY                                0x88E6
+
+
 #ifndef GL_DEDICATED_MEMORY_OBJECT_EXT
 #define GL_DEDICATED_MEMORY_OBJECT_EXT                0x9581
 #endif
@@ -816,8 +881,12 @@ extern PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
 #define		WGL_CONTEXT_PROFILE_MASK_ARB            0x9126
 
 //	Accepted as bits in the attribute value for WGL_CONTEXT_FLAGS in <*attribList>:
+#ifndef WGL_CONTEXT_DEBUG_BIT_ARB
 #define		WGL_CONTEXT_DEBUG_BIT_ARB               0x0001
+#endif
+#ifndef WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB
 #define		WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB  0x0002
+#endif
 
 //	Accepted as bits in the attribute value for
 //	WGL_CONTEXT_PROFILE_MASK_ARB in <*attribList>:

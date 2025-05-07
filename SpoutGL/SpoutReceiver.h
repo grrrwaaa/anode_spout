@@ -2,7 +2,7 @@
 
 					SpoutReceiver.h
 
-	Copyright (c) 2014-2023, Lynn Jarvis. All rights reserved.
+	Copyright (c) 2014-2025, Lynn Jarvis. All rights reserved.
 
 	Redistribution and use in source and binary forms, with or without modification, 
 	are permitted provided that the following conditions are met:
@@ -44,6 +44,8 @@ class SPOUT_DLLEXP SpoutReceiver {
 	//   If that sender closes, the application will wait for the nominated sender to open 
 	//   If no name is specified, the receiver will connect to the active sender
 	void SetReceiverName(const char * sendername = nullptr);
+	// Get sender for connection
+	bool GetReceiverName(char* SenderName, int maxchars = 256);
 	// Close receiver and release resources ready to connect to another sender
 	void ReleaseReceiver();
 	// Receive shared texture
@@ -88,8 +90,10 @@ class SPOUT_DLLEXP SpoutReceiver {
 	bool GetSenderCPU();
 	// Received sender GL/DX hardware compatibility
 	bool GetSenderGLDX();
+	// Return a list of current senders
+	std::vector<std::string> GetSenderList();
 	// Open sender selection dialog
-	void SelectSender();
+	bool SelectSender(HWND hwnd = NULL);
 
 	//
 	// Frame count
@@ -264,6 +268,10 @@ class SPOUT_DLLEXP SpoutReceiver {
 		GLuint DestID, GLuint DestTarget,
 		unsigned int width, unsigned int height,
 		bool bInvert = false, GLuint HostFBO = 0);
+	// Copy OpenGL texture data to a pixel buffer
+	bool ReadTextureData(GLuint SourceID, GLuint SourceTarget,
+		void* data, unsigned int width, unsigned int height, unsigned int rowpitch,
+		GLenum dataformat, GLenum datatype, bool bInvert = false, GLuint HostFBO = false);
 
 	//
 	// Formats

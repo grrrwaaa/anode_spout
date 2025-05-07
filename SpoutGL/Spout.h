@@ -4,7 +4,7 @@
 
 	Documentation - https://spoutgl-site.netlify.app/					
 
-	Copyright (c) 2014-2023, Lynn Jarvis. All rights reserved.
+	Copyright (c) 2014-2025, Lynn Jarvis. All rights reserved.
 
 	Redistribution and use in source and binary forms, with or without modification, 
 	are permitted provided that the following conditions are met:
@@ -92,6 +92,8 @@ class SPOUT_DLLEXP Spout : public spoutGL {
 	//   If that sender closes, the receiver will wait for the nominated sender to open 
 	//   If no name is specified, the receiver will connect to the active sender
 	void SetReceiverName(const char * sendername = nullptr);
+	// Get sender for connection
+	bool GetReceiverName(char* sendername, int maxchars = 256);
 	// Close receiver and release resources ready to connect to another sender
 	void ReleaseReceiver();
 	// Receive shared texture
@@ -134,12 +136,18 @@ class SPOUT_DLLEXP Spout : public spoutGL {
 	long GetSenderFrame();
 	// Received sender share handle
 	HANDLE GetSenderHandle();
+	// Received sender texture
+	ID3D11Texture2D* GetSenderTexture();
 	// Received sender sharing method
 	bool GetSenderCPU();
 	// Received sender GL/DX hardware compatibility
 	bool GetSenderGLDX();
+	// Return a list of current senders
+	std::vector<std::string> GetSenderList();
+	// Sender index into the set of names
+	int GetSenderIndex(const char* sendername);
 	// Open sender selection dialog
-	bool SelectSender();
+	bool SelectSender(HWND hwnd = NULL);
 
 	//
 	// Frame count
@@ -195,8 +203,12 @@ class SPOUT_DLLEXP Spout : public spoutGL {
 	bool GetAdapterInfo(char* description, char* output, int maxchars);
 	// Get the description and output display name for a given adapter
 	bool GetAdapterInfo(int index, char* description, char* output, int maxchars);
-// Windows 10 Vers 1803, build 17134 or later
-#ifdef NTDDI_WIN10_RS4
+
+	//
+	// Graphics preference
+	// Windows 10 Vers 1803, build 17134 or later
+	//
+
 	// Get the Windows graphics preference for an application
 	int GetPerformancePreference(const char* path = nullptr);
 	// Set the Windows graphics preference for an application
@@ -209,7 +221,6 @@ class SPOUT_DLLEXP Spout : public spoutGL {
 	bool IsPreferenceAvailable();
 	// Is the path a valid application
 	bool IsApplicationPath(const char* path);
-#endif
 
 	//
 	// 2.006 compatibility

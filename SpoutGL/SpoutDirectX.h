@@ -4,7 +4,7 @@
 
 	Functions to manage DirectX 11 texture sharing
 
-	Copyright (c) 2014 - 2023, Lynn Jarvis. All rights reserved.
+	Copyright (c) 2014 - 2024, Lynn Jarvis. All rights reserved.
 
 	Redistribution and use in source and binary forms, with or without modification, 
 	are permitted provided that the following conditions are met:
@@ -32,6 +32,8 @@
 #define __spoutDirectX__
 
 #include "SpoutCommon.h"
+
+#include <d3d9.h> // For format definitions
 #include <d3d11.h>
 #include <d3d11_1.h>
 #include <ntverp.h>
@@ -140,12 +142,9 @@ class SPOUT_DLLEXP spoutDirectX {
 		// Find the index of the NVIDIA adapter in a multi-adapter system
 		bool FindNVIDIA(int &nAdapter);
 
-
-// Windows 10 Vers 1803, build 17134 or later
-#ifdef NTDDI_WIN10_RS4
-
 		//
 		// Graphics preference
+		// Windows 10 Vers 1803, build 17134 or later
 		//
 
 		// Get the Windows graphics preference for an application
@@ -161,8 +160,6 @@ class SPOUT_DLLEXP spoutDirectX {
 		// Is the path a valid application
 		bool IsApplicationPath(const char* path);
 
-#endif
-
 	protected:
 
 		void DebugLog(ID3D11Device* pd3dDevice, const char* format, ...);
@@ -175,7 +172,6 @@ class SPOUT_DLLEXP spoutDirectX {
 		D3D_FEATURE_LEVEL		m_featureLevel;
 		ID3D11Device1*          m_pd3dDevice1;
 		ID3D11DeviceContext1*   m_pImmediateContext1;
-
 
 };
 

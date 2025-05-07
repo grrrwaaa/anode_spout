@@ -5,7 +5,7 @@
 	Base class for OpenGL SpoutSDK
 	See also Sender and Receiver wrapper classes.
 
-	Copyright (c) 2021-2023, Lynn Jarvis. All rights reserved.
+	Copyright (c) 2021-2025, Lynn Jarvis. All rights reserved.
 
 	Redistribution and use in source and binary forms, with or without modification, 
 	are permitted provided that the following conditions are met:
@@ -40,7 +40,6 @@
 #include "SpoutDirectX.h" // for DX11 shared textures
 #include "SpoutFrameCount.h" // for mutex lock and new frame signal
 #include "SpoutCopy.h" // for pixel copy
-#include "SpoutUtils.h" // Registry utiities
 
 #include <direct.h> // for _getcwd
 #include <TlHelp32.h> // for PROCESSENTRY32
@@ -49,7 +48,9 @@
 
 #pragma warning(disable : 26485)
 
+// Used throughout
 using namespace spoututils;
+
 
 class SPOUT_DLLEXP spoutGL {
 
@@ -145,10 +146,15 @@ class SPOUT_DLLEXP spoutGL {
 	// Copy OpenGL texture with optional invert
 	bool CopyTexture(GLuint SourceID, GLuint SourceTarget, GLuint DestID, GLuint DestTarget,
 		unsigned int width, unsigned int height, bool bInvert = false, GLuint HostFBO = 0);
+	// Copy OpenGL texture data to a pixel buffer
+	bool ReadTextureData(GLuint SourceID, GLuint SourceTarget,
+		void* data, unsigned int width, unsigned int height, unsigned int rowpitch,
+		GLenum dataformat, GLenum datatype, bool bInvert = false, GLuint HostFBO = 0);
 	// Correct for image stride
 	void RemovePadding(const unsigned char *source, unsigned char *dest,
 		unsigned int width, unsigned int height, unsigned int stride, GLenum glFormat = GL_RGBA);
-	// OpenGL error reprting
+
+	// OpenGL error reporting
 	bool GLerror();
 
 	// DX11 texture read
@@ -159,7 +165,7 @@ class SPOUT_DLLEXP spoutGL {
 	bool WriteTexture(ID3D11Texture2D** texture);
 	// DX11 texture write with readback to OpenGL texture
 	//   o Copy a DX11 texture to the DX11 shared texture
-	//   o Copy the linked OpenGL texture back to and OpenGL texture
+	//   o Copy the linked OpenGL texture back to an OpenGL texture
 	bool WriteTextureReadback(ID3D11Texture2D** texture, GLuint TextureID, GLuint TextureTarget,
 		unsigned int width, unsigned int height, bool bInvert, GLuint HostFBO = 0);
 
@@ -190,11 +196,10 @@ class SPOUT_DLLEXP spoutGL {
 	GLint GLformat(GLuint TextureID, GLuint TextureTarget);
 	// Return OpenGL texture format description
 	std::string GLformatName(GLint glformat = 0);
-
 	// Create an OpenGL window and context for situations where there is none.
 	//   Not used if applications already have an OpenGL context.
 	//   Always call CloseOpenGL afterwards.
-	bool CreateOpenGL();
+	bool CreateOpenGL(HWND hwnd = nullptr);
 	// Close OpenGL window
 	bool CloseOpenGL();
 	// Class initialization status
@@ -205,7 +210,7 @@ class SPOUT_DLLEXP spoutGL {
 	bool SetHostPath(const char *sendername);
 	// Set sender PartnerID field with CPU sharing method and GL/DX compatibility
 	bool SetSenderID(const char *sendername, bool bCPU, bool bGLDX);
-
+	
 	//
 	// 2.006 compatibility
 	//
@@ -229,6 +234,7 @@ class SPOUT_DLLEXP spoutGL {
 	bool IsCOPYavailable(); // copy extensions available
 	bool IsPBOavailable();  // pbo extensions supported
 	bool IsCONTEXTavailable(); // Context extension supported
+	float GetGLversion(); // OpenGL version - 3.0, 4.0, 4.6 etc
 
 	//
 	// Legacy OpenGL functions
@@ -258,12 +264,16 @@ class SPOUT_DLLEXP spoutGL {
 	bool WriteDX11texture(GLuint TextureID, GLuint TextureTarget, unsigned int width, unsigned int height, bool bInvert, GLuint HostFBO);
 	// Copy from shared DX11 texture to OpenGL via CPU
 	bool ReadDX11texture(GLuint TextureID, GLuint TextureTarget, unsigned int width, unsigned int height, bool bInvert, GLuint HostFBO);
-	// Read pixels from an OpenGL texture
+	// Read from an OpenGL texture to and RGBA buffer using pbo
 	bool UnloadTexturePixels(GLuint TextureID, GLuint TextureTarget,
 		unsigned int width, unsigned int height, unsigned int pitch,
 		unsigned char* data, GLenum glFormat = GL_RGBA,
 		bool bInvert = false, GLuint HostFBO = 0);
-
+	// Load pixels to an OpenGL texture using pbo
+	bool LoadTexturePixels(GLuint TextureID, GLuint TextureTarget,
+		unsigned int width, unsigned int height, 
+		const unsigned char* data, int GLformat = GL_RGBA,
+		bool bInvert = false);
 
 	//
 	// Data sharing
@@ -307,7 +317,7 @@ protected :
 	// OpenGL texture create
 	void CheckOpenGLTexture(GLuint &texID, GLenum GLformat, unsigned int width, unsigned int height);
 
-	// OpenGL texture copy
+	// OpenGL texture copy to/from the shared texture
 	bool WriteGLDXtexture(GLuint TextureID, GLuint TextureTarget, unsigned int width, unsigned int height, bool bInvert = true, GLuint HostFBO = 0);
 	bool ReadGLDXtexture(GLuint TextureID, GLuint TextureTarget, unsigned int width, unsigned int height, bool bInvert = false, GLuint HostFBO = 0);
 	bool SetSharedTextureData(GLuint TextureID, GLuint TextureTarget, unsigned int width, unsigned int height, bool bInvert, GLuint HostFBO);
@@ -317,15 +327,21 @@ protected :
 	bool ReadGLDXpixels(unsigned char* pixels, unsigned int width, unsigned int height, GLenum glFormat = GL_RGBA, bool bInvert = false, GLuint HostFBO = 0);
 	
 	// PBOs for OpenGL pixel copy
+	int m_nBuffers;
+
+	// UnloadTexturePixels
 	GLuint m_pbo[4];
 	int PboIndex;
 	int NextPboIndex;
-	int m_nBuffers;
+
+	// LoadTexturePixels
+	GLuint m_loadpbo[4];
+	int PboLoadIndex;
+	int NextPboLoadIndex;
 	
 	// OpenGL <-> DX11
 	// WriteDX11texture - public
 	// ReadDX11texture  - public
-	bool ReadTextureData(GLuint SourceID, GLuint SourceTarget, unsigned int width, unsigned int height, unsigned int pitch, unsigned char* dest, GLenum GLformat, bool bInvert, GLuint HostFBO);
 	
 	// Pixels <-> DX11
 	bool WriteDX11pixels(const unsigned char* pixels, unsigned int width, unsigned int height, GLenum glFormat = GL_RGBA, bool bInvert = false);
@@ -379,6 +395,7 @@ protected :
 	// GL/DX interop
 	HANDLE m_hInteropDevice; // Handle to the DX/GL interop device
 	HANDLE m_hInteropObject; // Handle to the DX/GL interop object (the shared texture)
+	bool m_bInteropFailed = false; // Interop failure flag to avoid repeats
 
 	// General
 	HWND m_hWnd; // OpenGL window
@@ -393,8 +410,6 @@ protected :
 	bool m_bConnected;
 	bool m_bUpdated;
 	bool m_bInitialized;
-	bool m_bMirror;  // Mirror image (used for SpoutCam)
-	bool m_bSwapRB;  // RGB <> BGR (used for SpoutCam)
 	bool m_bGLDXdone; // Compatibility test done
 
 	// Sharing modes

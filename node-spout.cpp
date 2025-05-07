@@ -130,6 +130,7 @@ struct Receiver : public Napi::ObjectWrap<Receiver> {
 	}
 
     ~Receiver() {
+		printf("release receiver\n");
         receiver.ReleaseReceiver();
     }
 

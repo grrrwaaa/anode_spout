@@ -4,7 +4,7 @@
 
 				Frame counting management
 
-	Copyright (c) 2019-2023. Lynn Jarvis. All rights reserved.
+	Copyright (c) 2019-2025. Lynn Jarvis. All rights reserved.
 
 	Redistribution and use in source and binary forms, with or without modification,
 	are permitted provided that the following conditions are met:
@@ -31,12 +31,11 @@
 #ifndef __spoutFrameCount__
 #define __spoutFrameCount__
 
-#include <string>
-#include <vector>
-
 #include "SpoutCommon.h"
 #include "SpoutSharedMemory.h"
 
+#include <string>
+#include <vector>
 #include <d3d11.h>
 #pragma comment (lib, "d3d11.lib") // for keyed mutex texture access
 #pragma comment (lib, "Winmm.lib") // for timer resolution functions 
@@ -151,6 +150,7 @@ protected:
 	char m_SenderName[256]; // sender currently connected to a receiver
 	long m_FrameCount; // sender frame count
 	long m_LastFrameCount; // receiver frame comparator
+	double m_FrameTime;
 	double m_FrameTimeTotal;
 	double m_FrameTimeNumber;
 	double m_lastFrame;

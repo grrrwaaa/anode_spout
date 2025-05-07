@@ -70,11 +70,11 @@ window.draw = function() {
 
 	if (received && receiver.isFrameNew()) {
 		// receiver.metadata is a raw Uint8array
-		receiver.getMetadata(metabuf)
+		//receiver.getMetadata(metabuf)
 		
 		//console.log(receiver.metadata)  
 		// if it was supposed to be a string (which e.g. Max sends data as), convert to string like this:
-		console.log("metadata", spout.metadata2string(metabuf))
+		//console.log("metadata", spout.metadata2string(metabuf))
 
 		if (receiver.isUpdated()) {
 			console.log("receive from", receiver.getSenderName())

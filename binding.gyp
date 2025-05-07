@@ -17,11 +17,12 @@
                 './node_modules/native-graphics-deps/include',
               ],
               'library_dirs': [
-                './lib/x64',
+                './lib',
                 './node_modules/native-graphics-deps/lib/windows/glew',
-                'lib/<(target_arch)',
+                'lib',
               ],
               'libraries': [
+                '-lSpout.lib',
                 '-lSpoutLibrary.lib',
                 'glew32.lib',
                 'opengl32.lib'
@@ -32,7 +33,7 @@
               ],
               "copies": [{
                 'destination': './build/<(CONFIGURATION_NAME)/',
-                'files': ['./lib/x64/SpoutLibrary.dll']
+                'files': ['./lib/SpoutLibrary.dll', './lib/Spout.dll']
               }]
             }],
             ['OS=="mac"', {
