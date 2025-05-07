@@ -116,22 +116,32 @@ struct Sender : public Napi::ObjectWrap<Sender> {
 struct Receiver : public Napi::ObjectWrap<Receiver> {
 
     SpoutReceiver receiver;    // Spout object
-    Napi::TypedArrayOf<uint8_t> metadata;
+    //Napi::TypedArrayOf<uint8_t> metadata;
 
     Receiver(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Receiver>(info) {
 		Napi::Env env = info.Env();
 		Napi::Object This = info.This().As<Napi::Object>();
-        metadata = Napi::TypedArrayOf<uint8_t>::New(env, 128, napi_uint8_array);
-        This.Set("metadata", metadata);
+        //metadata = Napi::TypedArrayOf<uint8_t>::New(env, 128, napi_uint8_array);
+        //This.Set("metadata", metadata);
 
         if (info.Length() > 0 && info[0].IsString()) {
             receiver.SetActiveSender(info[0].ToString().Utf8Value().c_str());
         }
 	}
 
+    // this doesn't seem to get called. Is that the problem?
     ~Receiver() {
 		printf("release receiver\n");
         receiver.ReleaseReceiver();
+    }
+
+    // TODO this is a hack because the destructor above never seems to get called. 
+    Napi::Value release(const Napi::CallbackInfo& info) {
+		Napi::Env env = info.Env();
+		Napi::Object This = info.This().As<Napi::Object>();
+        printf("release receiver\n");
+        receiver.ReleaseReceiver();
+        return This;
     }
 
     Napi::Value setName(const Napi::CallbackInfo& info) {
@@ -241,35 +251,39 @@ struct Receiver : public Napi::ObjectWrap<Receiver> {
         return Napi::Boolean::New(env, false);
     }
 
-    Napi::Value getMetadata(const Napi::CallbackInfo& info) {
-		Napi::Env env = info.Env();
-		Napi::Object This = info.This().As<Napi::Object>();
+    // Napi::Value getMetadata(const Napi::CallbackInfo& info) {
+	// 	Napi::Env env = info.Env();
+	// 	Napi::Object This = info.This().As<Napi::Object>();
 
-        int size = receiver.GetMemoryBufferSize(receiver.GetSenderName());
-        if (size) {
+    //     int size = receiver.GetMemoryBufferSize(receiver.GetSenderName());
+    //     if (size) {
 
-            // let's assume the user passed in a uint8array:
-            if (info[0].IsTypedArray()) {
-                auto arr = info[0].As<Napi::TypedArray>();
-                size_t len = arr.ByteLength();
-                void * dst = arr.ArrayBuffer().Data();
+    //         // let's assume the user passed in a uint8array:
+    //         if (info[0].IsTypedArray()) {
+    //             auto arr = info[0].As<Napi::TypedArray>();
+    //             size_t len = arr.ByteLength();
+    //             void * dst = arr.ArrayBuffer().Data();
 
-                receiver.ReadMemoryBuffer(receiver.GetSenderName(), (char *)dst, len);
-            }
+    //             receiver.ReadMemoryBuffer(receiver.GetSenderName(), (char *)dst, len);
+    //         }
 
-            // if (size != metadata.ElementLength()) {
-            //     // reallocate
-            //     printf("reallocating for %d bytes of metadata\n", size);
-            //     metadata = Napi::TypedArrayOf<uint8_t>::New(env, size, napi_uint8_array);
-            //     This.Set("metadata", metadata);
-            // }
-            // receiver.ReadMemoryBuffer(receiver.GetSenderName(), (char *)metadata.Data(), metadata.ElementLength());
-            // 
-            //printf("received %d %s\n", strlen((char *)metadata.Data()), (char *)metadata.Data());
-        }
-        return This;
-    }
+    //         // if (size != metadata.ElementLength()) {
+    //         //     // reallocate
+    //         //     printf("reallocating for %d bytes of metadata\n", size);
+    //         //     metadata = Napi::TypedArrayOf<uint8_t>::New(env, size, napi_uint8_array);
+    //         //     This.Set("metadata", metadata);
+    //         // }
+    //         // receiver.ReadMemoryBuffer(receiver.GetSenderName(), (char *)metadata.Data(), metadata.ElementLength());
+    //         // 
+    //         //printf("received %d %s\n", strlen((char *)metadata.Data()), (char *)metadata.Data());
+    //     }
+    //     return This;
+    // }
 };
+
+void cleanup_handler(void* data) {
+    printf("cleanup\n");
+}
 
 class Module : public Napi::Addon<Module> {
 public:
@@ -298,8 +312,13 @@ public:
 	// }
 
    // EnableSpoutLogFile("node_spout.log", true);
+
 	
 	Module(Napi::Env env, Napi::Object exports) {
+
+        //printf("add cleanup\n");
+        // this does not seem to actually call cleanup_handler() ever, unfortunately.
+        napi_add_env_cleanup_hook(env, cleanup_handler, 0);
 
         //EnableSpoutLog();
 
@@ -334,6 +353,7 @@ public:
         {// This method is used to hook the accessor and method callbacks
             Napi::Function receiver_ctor = Receiver::DefineClass(env, "Receiver", {
                 Receiver::InstanceMethod<&Receiver::setName>("setName"),
+                Receiver::InstanceMethod<&Receiver::release>("release"), // TODO delete this when destructors actually work properly
                 Receiver::InstanceMethod<&Receiver::setActiveSender>("setActiveSender"),
                 Receiver::InstanceMethod<&Receiver::getSenders>("getSenders"),
                 Receiver::InstanceMethod<&Receiver::getSenderFormat>("getSenderFormat"),
@@ -346,7 +366,7 @@ public:
                 Receiver::InstanceMethod<&Receiver::isUpdated>("isUpdated"),
                 Receiver::InstanceMethod<&Receiver::isFrameNew>("isFrameNew"),
                 Receiver::InstanceMethod<&Receiver::receiveTexture>("receiveTexture"),
-                Receiver::InstanceMethod<&Receiver::getMetadata>("getMetadata"),
+                //Receiver::InstanceMethod<&Receiver::getMetadata>("getMetadata"),
             });
 
             // Create a persistent reference to the class constructor.
